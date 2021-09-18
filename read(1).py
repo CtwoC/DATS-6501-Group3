@@ -86,6 +86,6 @@ for i in range(len(reviews)):
         reviews.loc[i, 'game'] = games.loc[idx,'app_name']
 
 #%%
-reviews.to_csv(path + "\new_reviews.csv")
+reviews.to_csv(path + "/new_reviews.csv")
 
 # %%
