@@ -1,7 +1,7 @@
 #%%
 #load data
 import pandas as pd
-df=pd.read_csv('new_reviews.csv')
+df=pd.read_csv('/Users/chenzichu/Desktop/Capstone/steam data/new_reviews.csv')
 #view
 df.head()
 df.describe()
@@ -30,9 +30,13 @@ mlb = MultiLabelBinarizer()
 mlb.fit(genre_dict)
 mlb.fit_transform(genres_l)   
 
-# %%
 #check sum of game genres
 genre_multi=list(mlb.fit_transform(genres_l))
 res = sum(genre_multi, 0)
-print(res)
+
+# %%
+#print genre numbers
+genre_sum={'Type':genre_dict,'Num':res}
+sum_view=pd.DataFrame(genre_sum)
+print(sum_view.sort_values(by=['Num'],ascending=False))
 # %%
