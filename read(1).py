@@ -6,12 +6,13 @@ from pandas import array
 import numpy as np
 from pandas.core.series import Series
 import os
-path = r"G:\新建文件夹"
+from sklearn.utils import resample
+path = r"D:\Pycharm Cloud\steam data"
 
 os.chdir(path)
 # %%
 #read steam_reviews
-
+'''
 reviews_raw = []
 with open('steam_new.json',encoding= 'UTF-8') as f:
     x=1
@@ -22,7 +23,12 @@ with open('steam_new.json',encoding= 'UTF-8') as f:
         reviews_raw.append(res)
         x+=1
         print(x)
+'''
+#%%
+# read reviews and get random sample
 
+reviews_raw = pd.read_csv('new_reviews.csv')
+#reviews_sample = resample(reviews, n_samples=1000000, random_state = 42)
 
 # %%
 #read steam_games
@@ -39,7 +45,7 @@ with open('steam_games.json',encoding= 'UTF-8') as f:
         print(x)
 # %%
 # convert to dataframe
-reviews = pd.DataFrame(reviews_raw)
+reviews = reviews_raw.copy()
 games = pd.DataFrame(games_raw)    
 # %%
 def binary_search(arr, target):
@@ -66,26 +72,42 @@ def binary_search(arr, target):
 
 # %%
 # sort game id
-
 games.dropna(subset=['id'],inplace=True)
 games['id'] = games['id'].astype(int)
 games = games.sort_values('id')
 games = games.reset_index()
 # change id to int
-reviews['product_id'] = reviews['product_id'].astype(int)
+#reviews = reviews.reset_index()
+#reviews['product_id'] = reviews['product_id'].astype(int)
 # %%
 # add two new cols
 
-reviews['genres'] = np.nan
-reviews['game'] = np.nan
+#reviews['genres'] = np.nan
+#reviews['game'] = np.nan
 # %%
-for i in range(len(reviews)):
+# Match
+x=1
+for i in range(700000,len(reviews)): 
     idx = binary_search(array(games['id']),reviews.iloc[i]['product_id'])
     if idx != 'Nope':
         reviews.loc[i, 'genres'] = str(games.loc[idx,'genres'])
         reviews.loc[i, 'game'] = games.loc[idx,'app_name']
+        x+=1
+        print(x)
+
 
 #%%
-reviews.to_csv(path + "/new_reviews.csv")
+reviews.to_csv(path + "\\new_reviews.csv")
 
+
+# %%
+#%%
+reviews[999980:999990]
+# %%
+len(reviews[reviews['game'].isnull()])
+
+# %%
+reviews = reviews.drop(columns=['Unnamed: 0','Unnamed: 0.1', 'index', 'Unnamed: 0.1.1'])
+# %%
+len(reviews)
 # %%
