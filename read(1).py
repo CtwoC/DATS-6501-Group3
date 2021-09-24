@@ -99,6 +99,7 @@ for i in range(700000,len(reviews)):
 #%%
 reviews.to_csv(path + "\\new_reviews.csv")
 
+
 # %%
 #%%
 reviews[999980:999990]
