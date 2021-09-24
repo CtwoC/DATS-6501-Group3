@@ -17,26 +17,18 @@ for genres in genres_s:
     except:
         print(genres)
 
-#make dict
-all_genres=[]
-for genres in genres_l:
-    all_genres+=genres
-
-genre_dict=list(set(all_genres))
 #%%
 #multi label encoder
 from sklearn.preprocessing import MultiLabelBinarizer
 mlb = MultiLabelBinarizer()
-mlb.fit(genre_dict)
 mlb.fit_transform(genres_l)   
 
 #check sum of game genres
 genre_multi=list(mlb.fit_transform(genres_l))
 res = sum(genre_multi, 0)
-
+genre_dict=list(mlb.classes_)
 # %%
 #print genre numbers
-genre_sum={'Type':genre_dict,'Num':res}
+genre_sum={'Type':mlb.classes_,'Num':res}
 sum_view=pd.DataFrame(genre_sum)
 print(sum_view.sort_values(by=['Num'],ascending=False))
-# %%
