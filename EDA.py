@@ -32,3 +32,21 @@ genre_dict=list(mlb.classes_)
 genre_sum={'Type':mlb.classes_,'Num':res}
 sum_view=pd.DataFrame(genre_sum)
 print(sum_view.sort_values(by=['Num'],ascending=False))
+
+#%%
+#genres lists to df, this takes a few minutes
+import numpy as np
+genre_df=pd.DataFrame(np.vstack(genre_multi))
+genre_df.columns=mlb.classes_
+# %%
+#visualize correlation
+correlation=genre_df.corr()
+correlation.style.background_gradient(cmap='coolwarm')
+# %%
+#concat genre encoded columns 
+df=df.dropna(subset=["genres"])
+new_df=df.join(genre_df)
+#choose columns
+sub=["text","Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
+new_df=new_df[sub]
+# %%
