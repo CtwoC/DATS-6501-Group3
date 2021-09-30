@@ -49,4 +49,7 @@ new_df=df.join(genre_df)
 #choose columns
 sub=["text","Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
 new_df=new_df[sub]
+#drop rows include none of these genres
+sub2=["Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
+new_df=new_df.loc[(new_df[sub2] != 0).any(axis=1)]
 # %%
