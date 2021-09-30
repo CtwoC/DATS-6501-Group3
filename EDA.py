@@ -1,7 +1,7 @@
 #%%
 #load data
 import pandas as pd
-df=pd.read_csv(r'D:\Pycharm Cloud\steam data\new_reviews.csv')
+df=pd.read_csv("/Users/chenzichu/Desktop/Capstone/data/new_reviews.csv")
 #view
 df.head()
 df.describe()
@@ -32,7 +32,8 @@ genre_dict=list(mlb.classes_)
 genre_sum={'Type':mlb.classes_,'Num':res}
 sum_view=pd.DataFrame(genre_sum)
 print(sum_view.sort_values(by=['Num'],ascending=False))
-
+#plot sum
+sum_view[["Type","Num"]].plot.bar(x="Type")
 #%%
 #genres lists to df, this takes a few minutes
 import numpy as np
@@ -117,7 +118,7 @@ for i in range(len(Casual)):
     
     normal_review.append(' '.join([t.lower() for t in tokens if t.isalpha()]))
 
-Casual['Normalizaed Review'] = normal_review
+Casual['Normalized Review'] = normal_review
 
 # %%
 Casual.to_csv('Casual_df.csv', index=False)
