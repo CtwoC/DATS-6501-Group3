@@ -1,7 +1,8 @@
 #%%
 #load data
 import pandas as pd
-df=pd.read_csv("/Users/chenzichu/Desktop/Capstone/data/new_reviews.csv")
+#df=pd.read_csv("/Users/chenzichu/Desktop/Capstone/data/new_reviews.csv")
+df=pd.read_csv(r"D:\Pycharm Cloud\steam data\new_reviews.csv")
 #view
 df.head()
 df.describe()
@@ -53,23 +54,40 @@ new_df=new_df[sub]
 #drop rows include none of these genres
 sub2=["Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
 new_df=new_df.loc[(new_df[sub2] != 0).any(axis=1)]
-# %%
-# save to local
-df.to_csv('new_df.csv', index=False)
+
+
+#%%
+new_df.to_csv('new_df.csv')
+
+#%%
+import os
+os.getcwd()
+
+
+
+
 
 # %%
-# Genre Casual
+# load new df(splited label)
+import pandas as pd
+import matplotlib as plt
+import numpy as np
+from scipy import stats
 
-Casual = new_df[new_df['Casual'] == 1]
+df=pd.read_csv(r"D:\Pycharm Cloud\steam data\new_df.csv")
+df.info()
+#%%
+# train test split
+
 
 #%%
 
-# Cleaning
+# Pandas Basic Cleaning
 
 def review_clean(df):
 
     # 直接删除评论列中的空值（不包含空字符串）
-    df = df.dropna(subset=['text'])
+    df.dropna(inplace=True)
 
     # 根据id与text两列作为参照，如存在用户id与text同时相同，那么只保留最开始出现的。
     df.drop_duplicates(subset=['text'], keep='first', inplace=True)
@@ -77,49 +95,103 @@ def review_clean(df):
     df.reset_index(drop=True, inplace=True)
 
     # 用空字符串('')替换纯数字('123')
-    df['text'] = df['text'].str.replace('^[0-9]*$', '')
-
-    # 将开头连续重复的部分替换为空''
-    prefix_series = df['text'].str.replace(r'(.)\1+$', '')
-    # 将结尾连续重复的部分替换为空''
-    suffix_series = df['text'].str.replace(r'^(.)\1+', '')
-
-    for index in range(len(df['text'])):
-        # 对开头连续重复的只保留重复内容的一个字符(如'aaabdc'->'abdc')
-        if prefix_series[index] != df['text'][index]:
-            char = df['text'][index][-1]
-            df['text'][index] = prefix_series[index] + char
-        # 对结尾连续重复的只保留重复内容的一个字符(如'bdcaaa'->'bdca')
-        elif suffix_series[index] != df['text'][index]:
-            char = df['text'][index][0]
-            df['text'][index] = char + suffix_series[index]
+    df['text'] = df['text'].str.replace('^[0-9]*$', '', regex =True)
 
     # 将空字符串转为'np.nan',即NAN,用于下一步删除这些评论
     df['text'].replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
-    # 删除comment中的空值，并重置索引
-    df = df.dropna(subset=['text'])
+    
+    # 删除空值，并重置索引
+    df.dropna(subset=['text'], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
 # %%
-review_clean(Casual)
+review_clean(df)
 
-Casual = Casual.dropna(subset=['text'])
+#%%
+# add length column(takes a few minutes)
+
+length =[]
+for i in range(len(df)):
+    length.append(len(df.iloc[i]['text']))
+df['length'] = length
+
+
 # %%
-# Normalization
+# Length analysis
+
+
+
+df['length'].hist(bins=1000, range=[0, 50])
+#%%
+# Length remove
+
+# Based on histgram(distribution)
+
+
+
+# Based on outlier
+
+# only remove large length
+
+# outlier_removed = df[(np.abs(stats.zscore(df['length'])) < 2.5)]
+#%%
+# get subset for test
+
+Casual = df[df['Casual'] == 1]
+
+Casual.head()
+
+#%%
+# Create stopwords
 
 import nltk
-from nltk import word_tokenize
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS as sklearn_stop_words
+nltk_stop_words = nltk.corpus.stopwords.words('english')
+
+stop_words = set(nltk_stop_words).union(sklearn_stop_words)
+print(len(stop_words))
+
+# add own stopwords
+stop_words.update(['game','play','time'])
+print(len(stop_words))
+#%%
+print(stop_words)
+
+# %%
+# Tokenize
+
+# lemma
+# lower
+# alpha
+# stopwords
+
+from textblob import TextBlob
+textCorrected = textBlb.correct()
+
+
+import nltk
+from nltk import TweetTokenizer
+
+Tt_Tokenizer = TweetTokenizer()
+stopwords = nltk.corpus.stopwords.words('english')
+wnl = nltk.WordNetLemmatizer()
 
 normal_review = []
-# wnl = nltk.WordNetLemmatizer()
 
 for i in range(len(Casual)):
-    tokens = word_tokenize(Casual.iloc[i]['text'])
+    tokens = Tt_Tokenizer(Casual.iloc[i]['text'])
+    for t in tokens:
+        if (t.isalpha()) and (t.lower() not in stopwords) and
+
     
-    normal_review.append(' '.join([t.lower() for t in tokens if t.isalpha()]))
+    normal_review.append(' '.join([wnl.lemmatize(t.lower()) for t in tokens if t.isalpha()]))
 
 Casual['Normalized Review'] = normal_review
 
+
+#%%
+all(isinstance(item, str) for item in Casual['text'])
 # %%
-Casual.to_csv('Casual_df.csv', index=False)
-# %%
+#%%
+# Casual.to_csv('Casual_df.csv', index=False)

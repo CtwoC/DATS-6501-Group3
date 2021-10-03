@@ -100,9 +100,7 @@ for i in range(700000,len(reviews)):
 reviews.to_csv(path + "\\new_reviews.csv")
 
 
-# %%
-#%%
-reviews[999980:999990]
+
 # %%
 len(reviews[reviews['game'].isnull()])
 
@@ -110,4 +108,54 @@ len(reviews[reviews['game'].isnull()])
 reviews = reviews.drop(columns=['Unnamed: 0','Unnamed: 0.1', 'index', 'Unnamed: 0.1.1'])
 # %%
 len(reviews)
+
+# %%
+games = pd.DataFrame(games_raw) 
+df = games.dropna(subset=['genres'])
+
+#%%
+#genre column to list
+import ast
+genres_l=df['genres'].dropna()
+
+#%%
+#multi label encoder
+from sklearn.preprocessing import MultiLabelBinarizer
+mlb = MultiLabelBinarizer()
+mlb.fit_transform(genres_l)   
+
+#check sum of game genres
+genre_multi=list(mlb.fit_transform(genres_l))
+res = sum(genre_multi, 0)
+genre_dict=list(mlb.classes_)
+# %%
+#print genre numbers
+genre_sum={'Type':mlb.classes_,'Num':res}
+sum_view=pd.DataFrame(genre_sum).sort_values(by=['Num'],ascending=False).reset_index(drop = True)
+
+print(sum_view)
+
+#%%
+a = sum_view['Num']
+
+#%%
+import matplotlib.pyplot as plt
+# plot sum
+sum_view[["Type","Num"]].plot.bar(x="Type")
+# pie plot
+colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+plt.figure(figsize=(8,8))
+grp = sum_view[["Type","Num"]]
+plt.pie(grp['Num'], labels=grp['Type'],  startangle=0,
+        autopct='%1.1f%%',pctdistance = 0.7,labeldistance=1.2, wedgeprops={'edgecolor':'black'}, colors=colors)
+plt.title('Dataset Genres Pie Plot')
+plt.savefig('Dataset Genres Pie Plot.png', dpi=300)
+plt.show()
+
+
+# %%
+for i in df.genres[0]:
+    print(i)
+# %%
+df.head()
 # %%
