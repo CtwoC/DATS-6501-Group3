@@ -49,19 +49,21 @@ correlation.style.background_gradient(cmap='coolwarm')
 df=df.dropna(subset=["genres"])
 new_df=df.join(genre_df)
 #choose columns
-sub=["text","Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
+sub=['text']+list(new_df.columns[15:])
 new_df=new_df[sub]
+
 #drop rows include none of these genres
-sub2=["Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
-new_df=new_df.loc[(new_df[sub2] != 0).any(axis=1)]
+#sub2=["Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
+#new_df=new_df.loc[(new_df[sub2] != 0).any(axis=1)]
 
-
-#%%
-new_df.to_csv('new_df.csv')
 
 #%%
 import os
 os.getcwd()
+os.chdir(r"D:\Pycharm Cloud\steam data")
+new_df.to_csv('new_df.csv')
+
+
 
 
 
@@ -107,39 +109,13 @@ def review_clean(df):
 # %%
 review_clean(df)
 
-#%%
-# add length column(takes a few minutes)
-
-length =[]
-for i in range(len(df)):
-    length.append(len(df.iloc[i]['text']))
-df['length'] = length
-
-
-# %%
-# Length analysis
-
-
-
-df['length'].hist(bins=1000, range=[0, 50])
-#%%
-# Length remove
-
-# Based on histgram(distribution)
-
-
-
-# Based on outlier
-
-# only remove large length
-
-# outlier_removed = df[(np.abs(stats.zscore(df['length'])) < 2.5)]
+df.head()
 #%%
 # get subset for test
 
-Casual = df[df['Casual'] == 1]
+df = df[df['df'] == 1]
 
-Casual.head()
+df.head()
 
 #%%
 # Create stopwords
@@ -155,43 +131,111 @@ print(len(stop_words))
 # add own stopwords
 stop_words.update(['game','play','time'])
 print(len(stop_words))
-#%%
-print(stop_words)
-
 # %%
 # Tokenize
-
-# lemma
-# lower
-# alpha
-# stopwords
-
-from textblob import TextBlob
-textCorrected = textBlb.correct()
-
-
 import nltk
 from nltk import TweetTokenizer
+from textblob import TextBlob
 
 Tt_Tokenizer = TweetTokenizer()
 stopwords = nltk.corpus.stopwords.words('english')
 wnl = nltk.WordNetLemmatizer()
+#%%
+from nltk.corpus import wordnet
 
-normal_review = []
-
-for i in range(len(Casual)):
-    tokens = Tt_Tokenizer(Casual.iloc[i]['text'])
-    for t in tokens:
-        if (t.isalpha()) and (t.lower() not in stopwords) and
-
-    
-    normal_review.append(' '.join([wnl.lemmatize(t.lower()) for t in tokens if t.isalpha()]))
-
-Casual['Normalized Review'] = normal_review
-
+# pos convert
+def get_wordnet_pos(tag):
+    if tag.startswith('J'):
+        return wordnet.ADJ
+    elif tag.startswith('V'):
+        return wordnet.VERB
+    elif tag.startswith('N'):
+        return wordnet.NOUN
+    elif tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return None
 
 #%%
-all(isinstance(item, str) for item in Casual['text'])
+# set minimum words number
+length_lim = 0
+
+x=0
+normal_reviews = []
+length =[]
+
+for i in range(len(df)):
+
+    txt  = df.iloc[i]['text']
+    # correct missspelling
+    #txt = TextBlob(txt)
+    #textCorrected = txt.correct()
+
+    tokens = Tt_Tokenizer.tokenize(txt)
+
+    normal_review = []
+    # lemma
+    # lower
+    # stopwords
+    for t in nltk.pos_tag(tokens):
+        pos_tag = get_wordnet_pos(t[1])    
+        if (t[0].isalpha()) and (pos_tag != None):
+            lemma_word = wnl.lemmatize(t[0].lower(), pos=pos_tag)
+            if lemma_word not in stop_words: 
+                normal_review.append(lemma_word)
+
+        if (t[0].isalpha()) and (pos_tag == None) and (t[0].lower() not in stop_words):
+            normal_review.append(t[0].lower())
+
+    # length
+    if len(normal_review) >= length_lim:
+        normal_reviews.append(normal_review)
+
+    length.append(len(normal_review))
+
+    x += 1
+    print(x)
+#%%
+df['Normalized Review'] = normal_reviews
+df['length'] = length
+df = df[df['length'] != 0]
+#%%
+all(isinstance(item, str) for item in df['text'])
 # %%
+# Length analysis
+
+df['length'].hist(bins=100,range=[1,300])
+
+print(df['length'].describe())
+
+print(len(df[df['length']==2]))
 #%%
-# Casual.to_csv('Casual_df.csv', index=False)
+# Length remove
+df
+# Based on histgram(distribution)
+
+
+
+# Based on outlier
+
+# only remove large length
+
+# outlier_removed = df[(np.abs(stats.zscore(df['length'])) < 2.5)]
+#%%
+# df.to_csv('df_df.csv', index=False)
+
+# %%
+len(df)
+# %%
+df.head()
+# %%
+
+# %%
+
+# %%
+
+
+df.to_csv('df_processed.csv')
+# %%
+stop_words
+# %%
