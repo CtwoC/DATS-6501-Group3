@@ -138,7 +138,6 @@ from nltk import TweetTokenizer
 from textblob import TextBlob
 
 Tt_Tokenizer = TweetTokenizer()
-stopwords = nltk.corpus.stopwords.words('english')
 wnl = nltk.WordNetLemmatizer()
 #%%
 from nltk.corpus import wordnet
