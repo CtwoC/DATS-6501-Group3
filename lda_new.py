@@ -1,12 +1,15 @@
 #%%
 import numpy as np
 import pandas as pd
+from scipy import stats
+
 #steam=pd.read_csv("/Users/chenzichu/Desktop/Capstone/data/df_processed.csv")
 steam=pd.read_csv(r"D:\Pycharm Cloud\steam data\df_processed.csv")
 #https://medium.com/@osas.usen/topic-extraction-from-tweets-using-lda-a997e4eb0985
 #%%
 steam = steam.drop(columns=['Unnamed: 0','Unnamed: 0.1'])
 steam = steam.loc[steam['length'] >= 10].reset_index(drop=(True))
+steam = steam[(np.abs(stats.zscore(steam['length'])) < 2.5)]
 #%%
 import ast
 from sklearn.feature_extraction.text import TfidfVectorizer
