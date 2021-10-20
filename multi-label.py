@@ -12,32 +12,31 @@ from sklearn.model_selection import train_test_split
 from keras.preprocessing.text import Tokenizer
 from keras.layers import Input
 from keras.layers.merge import Concatenate
-
+from scipy import stats
 import pandas as pd
 import numpy as np
 import re
 import pandas as pd
 #https://stackabuse.com/python-for-nlp-multi-label-text-classification-with-keras/
 #%%
-casual=pd.read_csv('/Users/chenzichu/Desktop/Capstone/data/Casual_df.csv')
-casual.head()
-
-#check if all value in text column are string
-all(isinstance(item, str) for item in casual['Normalizaed Review'])
-
-def checker(txt):
-    try:
-        float(txt)
-        return False
-    except:
-        return True
-
-casual=casual[casual['Normalizaed Review'].apply(checker)]
+df = pd.read_csv(r'D:\Pycharm Cloud\steam data\df_processed.csv')
+df.head()
+#%%
+df = df.drop(columns=['Unnamed: 0','Unnamed: 0.1'])
+df = df.loc[df['length'] >= 50].reset_index(drop=(True))
+df = df[(np.abs(stats.zscore(df['length'])) < 2.5)]
+#%%
+df.columns
 # %%
-review_labels=casual[["Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]]
+review_labels=df[['Action', 'Adventure', 'Animation &amp; Modeling',
+       'Audio Production', 'Casual', 'Design &amp; Illustration',
+       'Early Access', 'Education', 'Free to Play', 'Indie',
+       'Massively Multiplayer', 'Photo Editing', 'RPG', 'Racing', 'Simulation',
+       'Software Training', 'Sports', 'Strategy', 'Utilities',
+       'Video Production', 'Web Publishing']]
 review_labels.sum(axis=0).plot.bar()
 # %%
-x=list(casual["Normalizaed Review"])
+x=list(df["Normalized Review"])
 y=review_labels.values
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.20, random_state=42)
 # %%
@@ -61,7 +60,8 @@ from numpy import zeros
 
 embeddings_dictionary = dict()
 
-glove_file = open("/Users/chenzichu/Desktop/Capstone/data/glove.6B.100d.txt", encoding="utf8")
+#glove_file = open("/Users/chenzichu/Desktop/Capstone/data/glove.6B.100d.txt", encoding="utf8")
+glove_file = open(r"D:\Pycharm Cloud\glove\glove.6B.100d.txt", encoding="utf8")
 
 for line in glove_file:
     records = line.split()
@@ -75,12 +75,14 @@ for word, index in tokenizer.word_index.items():
     embedding_vector = embeddings_dictionary.get(word)
     if embedding_vector is not None:
         embedding_matrix[index] = embedding_vector
+#%%
+embedding_matrix
 # %%
 #model
 deep_inputs = Input(shape=(maxlen,))
 embedding_layer = Embedding(vocab_size, 100, weights=[embedding_matrix], trainable=False)(deep_inputs)
 LSTM_Layer_1 = LSTM(128)(embedding_layer)
-dense_layer_1 = Dense(9, activation='sigmoid')(LSTM_Layer_1)
+dense_layer_1 = Dense(17, activation='sigmoid')(LSTM_Layer_1)
 model = Model(inputs=deep_inputs, outputs=dense_layer_1)
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])

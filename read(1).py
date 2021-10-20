@@ -136,7 +136,7 @@ sum_view=pd.DataFrame(genre_sum).sort_values(by=['Num'],ascending=False).reset_i
 print(sum_view)
 
 #%%
-a = sum_view['Num']
+a = sum_view['Num'].copy()
 
 #%%
 import matplotlib.pyplot as plt
@@ -158,4 +158,23 @@ for i in df.genres[0]:
     print(i)
 # %%
 df.head()
+# %%
+a
+# %%
+sum_view = pd.DataFrame(np.transpose(np.vstack((b, a))))
+# %%
+sum_view['Type']
+# %%
+b = sum_view['Type'].copy()
+# %%
+a = a[:-1]
+
+# %%
+a
+# %%
+
+sum_view = sum_view.rename(columns={0: 'Type', 1:'Num'})
+# %%
+
+
 # %%
