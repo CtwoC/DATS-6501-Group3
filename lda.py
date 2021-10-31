@@ -7,46 +7,6 @@ steam=pd.read_csv(r"D:\Pycharm Cloud\steam data\df_processed.csv")
 #%%
 steam = steam.drop(columns=['Unnamed: 0','Unnamed: 0.1'])
 steam = steam.loc[steam['length'] >= 10].reset_index(drop=(True))
-#%%
-import ast
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
-
-number_of_topics = 1
-lda = LatentDirichletAllocation(n_components=number_of_topics, random_state=45) # random state for reproducibility
-
-
-genre = ['Action', 'Adventure','Casual','Education','Indie',
-       'RPG', 'Racing', 'Simulation','Sports','Strategy']
-#%%
-Topic = []
-
-for i in genre:
-    word_list = [w for r in steam[steam[i] == 1]['Normalized Review'] for w in ast.literal_eval(r)]
-    corpus = word_list
-    vectorizer = TfidfVectorizer()
-    TFIDF = vectorizer.fit_transform(corpus)
-    print(TFIDF.shape)
-
-    terms = vectorizer.get_feature_names()
-    lda.fit(TFIDF)
-
-    topic  = []
-    for comp in lda.components_:
-        termsInComp = zip(terms,comp)
-        sortedterms = sorted(termsInComp, key=lambda x: x[1],reverse=True)[:30]        
-        for term in sortedterms:
-            topic.append(term[0])
-
-Topic.append(topic)
-
-#%%
-pd.DataFrame(Topic,columns=genre)
-
-#%%       
-
-#%%
-
 
 # %%
 
