@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
-
+import nltk
 #steam=pd.read_csv("/Users/chenzichu/Desktop/Capstone/data/df_processed.csv")
 steam=pd.read_csv(r"D:\Pycharm Cloud\steam data\df_processed.csv")
 #https://medium.com/@osas.usen/topic-extraction-from-tweets-using-lda-a997e4eb0985
@@ -16,9 +16,10 @@ import ast
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
-number_of_topics = 1
+number_of_topics = 5
 lda = LatentDirichletAllocation(n_components=number_of_topics, random_state=45) # random state for reproducibility
 vectorizer = TfidfVectorizer()
+words = set(nltk.corpus.words.words())
 
 genre = ['Action', 'Adventure','Casual','Education','Indie',
        'RPG', 'Racing', 'Simulation','Sports','Strategy']
@@ -57,7 +58,8 @@ lda_stopwords = ['like', 'good', 'fun', 'great', 'really', 'make', 'story', 'buy
        'learn', 'fantastic', 'single', 'shooter', 'leave',
        'hope', 'especially', 'amaze', 'team', 'reason', 'access', 'item',
        'lose', 'zombie', 'support', 'alot''adventure','type','wish','stop', 'open', 'devs', 'main', 
-       'im', 'away', 'super', 'skill']
+       'im', 'away', 'super', 'skill', 'Action', 'Adventure','Casual','Education','Indie',
+       'RPG', 'Racing', 'Simulation','Sports','Strategy','genre']
 #%%
 # remove lda stopwords
 LDA_Reviews = []
@@ -65,7 +67,7 @@ lda_review = []
 for i in range(len(steam['Normalized Review'])):
     word_list = []
     for w in ast.literal_eval(steam['Normalized Review'][i]):
-        if w not in lda_stopwords:
+        if w not in lda_stopwords and w in words and w.isalpha():
             word_list.append(w)
         
     LDA_Reviews.append(word_list)
@@ -74,7 +76,7 @@ for i in range(len(steam['Normalized Review'])):
 #%%
 steam['LDA_Review'] = LDA_Reviews
 #%%
-[' '.join(r) for r in steam[steam['Casual'] == 1]['LDA_Review'] ]
+testdf = [' '.join(r) for r in steam[steam['Casual'] == 1]['LDA_Review'] ]
 #steam['Normalized Review'][0]
 #%%
 # LDA fit all genres 
@@ -98,8 +100,9 @@ for i in genre:
     Topic.append(topic)
 
 #%%
-pd.DataFrame(np.array(Topic).transpose(),columns=genre)
-
+lda_result = pd.DataFrame(np.array(Topic).transpose(),columns=genre)
+#%%
+lda_result
 #%%       
 np.array(Topic)[0]
 
@@ -109,3 +112,27 @@ np.array(Topic)[0]
        'learn', 'fantastic', 'single', 'shooter', 'leave',
        'hope', 'especially', 'amaze', 'team', 'reason', 'access', 'item',
        'lose', 'zombie', 'support', 'alot'
+
+
+#%%
+lda_result.to_csv('lda_result33.csv')
+# %%
+import pyLDAvis
+pyLDAvis.enable_notebook()
+import lda2vec
+#%%
+# show lda2vec result
+npz = np.load(open('topics.pyldavis.npz', 'r'))
+dat = {k: v for (k, v) in npz.iteritems()}
+dat['vocab'] = dat['vocab'].tolist()
+# dat['term_frequency'] = dat['term_frequency'] * 1.0 / dat['term_frequency'].sum()
+#%%
+top_n = 10
+topic_to_topwords = {}
+for j, topic_to_word in enumerate(dat['topic_term_dists']):
+    top = np.argsort(topic_to_word)[::-1][:top_n]
+    msg = 'Topic %i '  % j
+    top_words = [dat['vocab'][i].strip()[:35] for i in top]
+    msg += ' '.join(top_words)
+    print (msg)
+    topic_to_topwords[j] = top_words

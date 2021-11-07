@@ -1,74 +1,3 @@
-#%%
-#load data
-import pandas as pd
-#df=pd.read_csv("/Users/chenzichu/Desktop/Capstone/data/new_reviews.csv")
-df=pd.read_csv(r"D:\Pycharm Cloud\steam data\new_reviews.csv")
-#view
-df.head()
-df.describe()
-df['genres'].value_counts(dropna=True)
-#%%
-#genre column to list
-import ast
-genres_s=df['genres'].dropna().tolist()
-genres_l=[]
-for genres in genres_s:
-    try:
-        genres_l.append(ast.literal_eval(genres))
-    except:
-        print(genres)
-
-#%%
-#multi label encoder
-from sklearn.preprocessing import MultiLabelBinarizer
-mlb = MultiLabelBinarizer()
-mlb.fit_transform(genres_l)   
-
-#check sum of game genres
-genre_multi=list(mlb.fit_transform(genres_l))
-res = sum(genre_multi, 0)
-genre_dict=list(mlb.classes_)
-# %%
-#print genre numbers
-genre_sum={'Type':mlb.classes_,'Num':res}
-sum_view=pd.DataFrame(genre_sum)
-print(sum_view.sort_values(by=['Num'],ascending=False))
-#plot sum
-sum_view[["Type","Num"]].plot.bar(x="Type")
-#%%
-#genres lists to df, this takes a few minutes
-import numpy as np
-genre_df=pd.DataFrame(np.vstack(genre_multi))
-genre_df.columns=mlb.classes_
-# %%
-#visualize correlation
-correlation=genre_df.corr()
-correlation.style.background_gradient(cmap='coolwarm')
-# %%
-#concat genre encoded columns 
-df=df.dropna(subset=["genres"])
-new_df=df.join(genre_df)
-#choose columns
-sub=['text']+list(new_df.columns[15:])
-new_df=new_df[sub]
-
-#drop rows include none of these genres
-#sub2=["Action","Indie","Adventure","RPG","Strategy","Simulation","Casual","Sports","Racing"]
-#new_df=new_df.loc[(new_df[sub2] != 0).any(axis=1)]
-
-
-#%%
-import os
-os.getcwd()
-os.chdir(r"D:\Pycharm Cloud\steam data")
-new_df.to_csv('new_df.csv')
-
-
-
-
-
-
-
 # %%
 # load new df(splited label)
 import pandas as pd
@@ -111,13 +40,6 @@ review_clean(df)
 
 df.head()
 #%%
-# get subset for test
-
-df = df[df['df'] == 1]
-
-df.head()
-
-#%%
 # Create stopwords
 
 import nltk
@@ -129,20 +51,13 @@ stop_words = set(nltk_stop_words).union(sklearn_stop_words)
 print(len(stop_words))
 
 # add own stopwords
-stop_words.update(['game','play','time'])
+stop_words.update(['game','play','time', 'player'])
 print(len(stop_words))
-# %%
-# Tokenize
-import nltk
-from nltk import TweetTokenizer
-from textblob import TextBlob
 
-Tt_Tokenizer = TweetTokenizer()
-wnl = nltk.WordNetLemmatizer()
 #%%
 from nltk.corpus import wordnet
 
-# pos convert
+# pos_tag convert
 def get_wordnet_pos(tag):
     if tag.startswith('J'):
         return wordnet.ADJ
@@ -154,8 +69,44 @@ def get_wordnet_pos(tag):
         return wordnet.ADV
     else:
         return None
-
 #%%
+import re
+def remove_emoji(string):
+    emoji_pattern = re.compile("["
+                               u"\U0001F600-\U0001F64F"  # emoticons
+                               u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                               u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                               u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                               u"\U00002500-\U00002BEF"  # chinese char
+                               u"\U00002702-\U000027B0"
+                               u"\U00002702-\U000027B0"
+                               u"\U000024C2-\U0001F251"
+                               u"\U0001f926-\U0001f937"
+                               u"\U00010000-\U0010ffff"
+                               u"\u2640-\u2642"
+                               u"\u2600-\u2B55"
+                               u"\u200d"
+                               u"\u23cf"
+                               u"\u23e9"
+                               u"\u231a"
+                               u"\ufe0f"  # dingbats
+                               u"\u3030"
+                               "]+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', string)
+# %%
+# Tokenize
+import nltk
+from nltk import TweetTokenizer
+from textblob import TextBlob
+
+Tt_Tokenizer = TweetTokenizer()
+wnl = nltk.WordNetLemmatizer()
+
+""" select spell checkers & load """
+checker = BertChecker()
+checker.from_pretrained()
+# %%
+
 # set minimum words number
 length_lim = 0
 
@@ -165,11 +116,10 @@ length =[]
 
 for i in range(len(df)):
 
-    txt  = df.iloc[i]['text']
+    txt  = remove_emoji(df.iloc[i]['text'])
     # correct missspelling
-    #txt = TextBlob(txt)
-    #textCorrected = txt.correct()
-
+    checker.correct(txt)
+    # tokenize
     tokens = Tt_Tokenizer.tokenize(txt)
 
     normal_review = []
@@ -220,21 +170,16 @@ df
 # only remove large length
 
 # outlier_removed = df[(np.abs(stats.zscore(df['length'])) < 2.5)]
-#%%
-# df.to_csv('df_df.csv', index=False)
-
-# %%
-len(df)
-# %%
-df.head()
-# %%
-
-# %%
 
 # %%
 
 
-df.to_csv('df_processed.csv')
+df.to_csv('df_processed_correct.csv')
+
 # %%
-stop_words
+
+
+
+# %%
+
 # %%
