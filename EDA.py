@@ -4,12 +4,24 @@ import pandas as pd
 import matplotlib as plt
 import numpy as np
 from scipy import stats
+from sklearn.utils import resample
 
 df=pd.read_csv(r"D:\Pycharm Cloud\steam data\new_df.csv")
 df.info()
+
 #%%
 # train test split
+action  = df[df['Action'] == 1]
+action_sample = resample(action, n_samples=363789, random_state = 42)
+action_sample.reset_index(drop=True,inplace =True)
+df1 = pd.concat([action_sample, df[df['Action'] != 1]  ], axis=0).reset_index(drop=True)
 
+Indie  = df[df['Indie'] == 1]
+Indie_sample = resample(Indie, n_samples=344291, random_state = 42)
+Indie_sample.reset_index(drop=True,inplace =True)
+df2 = pd.concat([Indie_sample, df1[df1['Indie'] != 1]  ], axis=0)
+
+df = df2.copy()
 
 #%%
 
@@ -51,9 +63,53 @@ stop_words = set(nltk_stop_words).union(sklearn_stop_words)
 print(len(stop_words))
 
 # add own stopwords
-stop_words.update(['game','play','time', 'player'])
+stop_words.update(['game','play','time', 'player''like', 'good', 'fun', 'great', 'really', 'make', 'story', 'buy',
+       'love', 'hour', 'recommend', 'lot', 'want', 'gameplay', 'thing',
+       'look', 'best', 'say', 'feel', 'character', 'worth', 'think',
+       'try', 'way', 'graphic', 'new', 'people', 'level', 'enjoy', 'bad', 'pretty', 
+       'work', 'need', 'player', 'use', 'little', 'start', 'bit',  'know', 'come', 
+       'nice', 'end', 'hard', 'amazing', 'money', 'far', 'awesome', 'free', 
+       'easy', 'review', 'long', 'different', 'kill', 'steam', 'friend', 'run', 
+       'puzzle', 'experience', 'control', 'short', 'year', 'price', 'music', 'bug', 'old', 'update',
+       'overall', 'add', 'point', 'sale', 'quite', 'actually', 'right',
+       'map', 'day', 'wait', 'mode', 'fix', 'dont', 
+       'pay','world','combat', 'weapon', 'mechanic', 'multiplayer', 'enemy', 'mod',
+       'definitely', 'problem', 'fan', 'simple', 'style',
+       'pc', 'base', 'spend', 'change', 'issue', 'server',
+       'die', 'life', 'content', 'finish', 'sure', 'fps', 'big', 'cool',
+       'highly', 'early', 'turn','challenge', 'interesting', 'real', 'release', 'version',
+       'complete', 'probably',  'minute',
+        'mission', 'crash', 'expect', 'series',
+       'developer', 'stuff', 'original',  'high', 'community',
+       'online', 'dlc', 'pick', 'kind', 'mean', 'sound', 'let','build', 'art', 'design', 
+       'fight', 'beautiful', 'action', 'maybe',
+       'rpg', 'soundtrack', 'beat', 'unique', 'gun', 'tell', 'help',
+       'learn', 'fantastic', 'single', 'shooter', 'leave',
+       'hope', 'especially', 'amaze', 'team', 'reason', 'access', 'item',
+       'lose', 'zombie', 'support', 'alot''adventure','type','wish','stop', 'open', 'devs', 'main', 
+       'im', 'away', 'super', 'skill', 'Action', 'Adventure','Casual','Education','Indie',
+       'RPG', 'Racing', 'Simulation','Sports','Strategy','genre'])
 print(len(stop_words))
 
+#%%
+import nltk
+from nltk import TweetTokenizer, FreqDist
+Tt_Tokenizer = TweetTokenizer()
+#%%
+# Term Frequency
+'''
+TXT = ''
+x = 0
+for i in range(len(df)):
+    txt  = df.iloc[i]['text']
+    tokens = Tt_Tokenizer.tokenize(txt)
+    tokens = ' '.join([w.lower() for w in tokens if w.isalpha()])
+    TXT += tokens
+    x += 1
+    print(x)
+'''
+#%%
+TXT
 #%%
 from nltk.corpus import wordnet
 
@@ -97,14 +153,15 @@ def remove_emoji(string):
 # Tokenize
 import nltk
 from nltk import TweetTokenizer
-from textblob import TextBlob
+#import neuspell
+#from neuspell import BertChecker
 
 Tt_Tokenizer = TweetTokenizer()
 wnl = nltk.WordNetLemmatizer()
 
 """ select spell checkers & load """
-checker = BertChecker()
-checker.from_pretrained()
+#checker = BertChecker()
+#checker.from_pretrained()
 # %%
 
 # set minimum words number
@@ -118,7 +175,7 @@ for i in range(len(df)):
 
     txt  = remove_emoji(df.iloc[i]['text'])
     # correct missspelling
-    checker.correct(txt)
+    # checker.correct(txt)
     # tokenize
     tokens = Tt_Tokenizer.tokenize(txt)
 
@@ -134,7 +191,7 @@ for i in range(len(df)):
                 normal_review.append(lemma_word)
 
         if (t[0].isalpha()) and (pos_tag == None) and (t[0].lower() not in stop_words):
-            normal_review.append(t[0].lower())
+                normal_review.append(t[0].lower())
 
     # length
     if len(normal_review) >= length_lim:
@@ -174,7 +231,7 @@ df
 # %%
 
 
-df.to_csv('df_processed_correct.csv')
+df.to_csv('df_processed_correct.csv', encoding="'utf-8-sig'")
 
 # %%
 
