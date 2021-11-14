@@ -70,9 +70,10 @@ attention_masks = encodings['attention_mask'] # attention masks
 
 #%%
 # Identifying indices of 'one_hot_labels' entries that only occur once - this will allow us to stratify split our training data later
-label_counts = df.one_hot_labels.astype(str).value_counts()
-one_freq = label_counts[label_counts==1].keys()
-one_freq_idxs = sorted(list(df[df.one_hot_labels.astype(str).isin(one_freq)].index), reverse=True)
+label_counts = [int(sum(l)) for l in labels]
+df=df.assign(label_counts=label_counts)
+one_freq = df.loc[df['label_counts'] == 1]
+one_freq_idxs = sorted(list(one_freq.index), reverse=True)
 
 
 # Gathering single instance inputs to force into the training set after stratified split
