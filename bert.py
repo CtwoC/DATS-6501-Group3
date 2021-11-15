@@ -24,6 +24,8 @@ df_10 = df.loc[df['length'] >= 10].reset_index()
 df_20 = df.loc[df['length'] >= 20].reset_index()
 df_30 = df.loc[df['length'] >= 30].reset_index()
 
+df_100 = df.loc[df['length'] >= 100].reset_index()
+
 df=df_20
 #%%
 col_names=['Action', 'Adventure',
@@ -35,7 +37,7 @@ col_names=['Action', 'Adventure',
 
 df['one_hot_labels'] = list(df[col_names].values)
 num_labels=len(col_names)
-labels=df.one_hot_labels.values
+labels=df.one_hot_labels.values.tolist()
 comments = list(df["text"].values)
 # %%
 
