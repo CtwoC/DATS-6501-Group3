@@ -40,7 +40,7 @@ num_labels=len(col_names)
 labels=df.one_hot_labels.values.tolist()
 comments = list(df["text"].values)
 # %%
-
+#tokenize and encoding
 max_length = 100
 #Bert
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True) # tokenizer
@@ -103,16 +103,15 @@ batch_size = 32
 
 # Dataloader
 train_data = TensorDataset(train_inputs, train_masks, train_labels, train_token_types)
-train_sampler = RandomSampler(train_data)
-train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
+train_dataloader = DataLoader(train_data, batch_size=batch_size,num_workers=0)
+
 
 validation_data = TensorDataset(validation_inputs, validation_masks, validation_labels, validation_token_types)
-validation_sampler = SequentialSampler(validation_data)
-validation_dataloader = DataLoader(validation_data, sampler=validation_sampler, batch_size=batch_size)
+validation_dataloader = DataLoader(validation_data, batch_size=batch_size,num_workers=0)
 
 #%%
 model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=num_labels)
-model.cuda()
+# model.cuda()
 
 # setting custom optimization parameters. You may implement a scheduler here as well.
 param_optimizer = list(model.named_parameters())
@@ -134,7 +133,8 @@ train_loss_set = []
 epochs = 5
 
 # trange is a tqdm wrapper around the normal python range
-for _ in trange(epochs, desc="Epoch"):
+for _ in range(epochs):
+  print("training epoch:"+str(_))
 
   # Training
   
@@ -146,7 +146,7 @@ for _ in trange(epochs, desc="Epoch"):
   nb_tr_examples, nb_tr_steps = 0, 0
   
   # Train the data for one epoch
-  for step, batch in enumerate(train_dataloader):
+  for step, batch in enumerate(tqdm(train_dataloader)):
     # Add batch to GPU
     batch = tuple(t.to(device) for t in batch)
     # Unpack the inputs from our dataloader
@@ -225,5 +225,5 @@ for _ in trange(epochs, desc="Epoch"):
   print('Flat Validation Accuracy: ', val_flat_accuracy)
 
 
-#%%
-#Prediction
+
+# %%
