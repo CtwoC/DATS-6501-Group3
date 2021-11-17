@@ -26,7 +26,7 @@ df_30 = df.loc[df['length'] >= 30].reset_index()
 
 df_100 = df.loc[df['length'] >= 100].reset_index()
 
-df=df_20
+df=df_100
 #%%
 col_names=['Action', 'Adventure',
        'Animation &amp; Modeling', 'Audio Production', 'Casual',
@@ -41,7 +41,7 @@ labels=df.one_hot_labels.values.tolist()
 comments = list(df["text"].values)
 # %%
 #tokenize and encoding
-max_length = 100
+max_length = 50
 #Bert
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True) # tokenizer
 
@@ -111,7 +111,7 @@ validation_dataloader = DataLoader(validation_data, batch_size=batch_size,num_wo
 
 #%%
 model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=num_labels)
-# model.cuda()
+model.cuda()
 
 # setting custom optimization parameters. You may implement a scheduler here as well.
 param_optimizer = list(model.named_parameters())
@@ -152,7 +152,7 @@ for _ in range(epochs):
     # Unpack the inputs from our dataloader
     b_input_ids, b_input_mask, b_labels, b_token_types = batch
     # Clear out the gradients (by default they accumulate)
-    optimizer.zero_grad()
+    # optimizer.zero_grad()
 
     # # Forward pass for multiclass classification
     # outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
@@ -181,48 +181,49 @@ for _ in range(epochs):
   print("Train loss: {}".format(tr_loss/nb_tr_steps))
 
 ###############################################################################
-
   # Validation
+  with torch.no_grad():
+    
 
-  # Put model in evaluation mode to evaluate loss on the validation set
-  model.eval()
+    # Put model in evaluation mode to evaluate loss on the validation set
+    model.eval()
 
-  # Variables to gather full output
-  logit_preds,true_labels,pred_labels,tokenized_texts = [],[],[],[]
+    # Variables to gather full output
+    logit_preds,true_labels,pred_labels,tokenized_texts = [],[],[],[]
 
-  # Predict
-  for i, batch in enumerate(validation_dataloader):
-    batch = tuple(t.to(device) for t in batch)
-    # Unpack the inputs from our dataloader
-    b_input_ids, b_input_mask, b_labels, b_token_types = batch
-    with torch.no_grad():
-      # Forward pass
-      outs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
-      b_logit_pred = outs[0]
-      pred_label = torch.sigmoid(b_logit_pred)
+    # Predict
+    for i, batch in enumerate(validation_dataloader):
+      batch = tuple(t.to(device) for t in batch)
+      # Unpack the inputs from our dataloader
+      b_input_ids, b_input_mask, b_labels, b_token_types = batch
+      with torch.no_grad():
+        # Forward pass
+        outs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
+        b_logit_pred = outs[0]
+        pred_label = torch.sigmoid(b_logit_pred)
 
-      b_logit_pred = b_logit_pred.detach().cpu().numpy()
-      pred_label = pred_label.to('cpu').numpy()
-      b_labels = b_labels.to('cpu').numpy()
+        b_logit_pred = b_logit_pred.detach().cpu().numpy()
+        pred_label = pred_label.to('cpu').numpy()
+        b_labels = b_labels.to('cpu').numpy()
 
-    tokenized_texts.append(b_input_ids)
-    logit_preds.append(b_logit_pred)
-    true_labels.append(b_labels)
-    pred_labels.append(pred_label)
+      tokenized_texts.append(b_input_ids)
+      logit_preds.append(b_logit_pred)
+      true_labels.append(b_labels)
+      pred_labels.append(pred_label)
 
-  # Flatten outputs
-  pred_labels = [item for sublist in pred_labels for item in sublist]
-  true_labels = [item for sublist in true_labels for item in sublist]
+    # Flatten outputs
+    pred_labels = [item for sublist in pred_labels for item in sublist]
+    true_labels = [item for sublist in true_labels for item in sublist]
 
-  # Calculate Accuracy
-  threshold = 0.50
-  pred_bools = [pl>threshold for pl in pred_labels]
-  true_bools = [tl==1 for tl in true_labels]
-  val_f1_accuracy = f1_score(true_bools,pred_bools,average='micro')*100
-  val_flat_accuracy = accuracy_score(true_bools, pred_bools)*100
+    # Calculate Accuracy
+    threshold = 0.50
+    pred_bools = [pl>threshold for pl in pred_labels]
+    true_bools = [tl==1 for tl in true_labels]
+    val_f1_accuracy = f1_score(true_bools,pred_bools,average='micro')*100
+    val_flat_accuracy = accuracy_score(true_bools, pred_bools)*100
 
-  print('F1 Validation Accuracy: ', val_f1_accuracy)
-  print('Flat Validation Accuracy: ', val_flat_accuracy)
+    print('F1 Validation Accuracy: ', val_f1_accuracy)
+    print('Flat Validation Accuracy: ', val_flat_accuracy)
 
 
 
